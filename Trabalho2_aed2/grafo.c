@@ -42,10 +42,13 @@ int insere_elem (Lista *lst, int inicio, int fim)
     Lista aux = *lst; // Faz aux apontar para 1onó
     while (aux->prox != NULL && (aux->prox->inicio < inicio || (aux->prox->inicio == inicio && aux->prox->fim < fim)))
         aux = aux->prox; // Avança
-    if(aux->prox->inicio == inicio && aux->prox->fim == fim)//se o elemento já existe, não precisa inserir
+    if(aux->prox!=NULL)
     {
-        limpa_lista(&N);
-        return 2;
+        if(aux->prox->inicio == inicio && aux->prox->fim == fim)//se o elemento já existe, não precisa inserir
+        {
+            limpa_lista(&N);
+            return 2;
+        }
     }
     // Insere o novo elemento na lista
     N->prox = aux->prox;
@@ -112,6 +115,14 @@ TipoGrafo* CriarGrafo(int NVertices)
     int j = 0;
     while(i<NVertices)
     {
+        Grafo->Mat[i] = (Lista*) calloc (NVertices,sizeof(Lista));
+        if (Grafo->Mat[i] == NULL)
+        {
+            for (k=0; k<i; k++)
+                free(Grafo->Mat[k]);
+            free(Grafo) ;
+            return NULL;
+        }
         while(j<NVertices)
         {
             Grafo->Mat[i][j] = cria_lista();
