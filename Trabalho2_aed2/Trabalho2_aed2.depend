@@ -1,0 +1,25 @@
+# depslib dependency file v1.0
+1630679466 source:d:\c proj\trabalho2_aed2\dijkstra.c
+
+1632243781 source:d:\c proj\trabalho2_aed2\fila.c
+	<stdio.h>
+	<stdlib.h>
+	"fila.h"
+
+1632243781 d:\c proj\trabalho2_aed2\fila.h
+	"no.h"
+
+1632243781 d:\c proj\trabalho2_aed2\no.h
+
+1632243840 source:d:\c proj\trabalho2_aed2\main.c
+	<stdlib.h>
+	<stdio.h>
+	"grafo.h"
+
+1632243781 d:\c proj\trabalho2_aed2\grafo.h
+	"lista_ord.h"
+
+1632242614 d:\c proj\trabalho2_aed2\lista_ord.h
+	<stdio.h>
+	<stdlib.h>
+
