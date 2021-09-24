@@ -11,15 +11,21 @@
 
 1632243781 d:\c proj\trabalho2_aed2\no.h
 
-1632243840 source:d:\c proj\trabalho2_aed2\main.c
+1632497726 source:d:\c proj\trabalho2_aed2\main.c
 	<stdlib.h>
 	<stdio.h>
 	"grafo.h"
 
-1632243781 d:\c proj\trabalho2_aed2\grafo.h
+1632497657 d:\c proj\trabalho2_aed2\grafo.h
 	"lista_ord.h"
 
 1632242614 d:\c proj\trabalho2_aed2\lista_ord.h
 	<stdio.h>
 	<stdlib.h>
+
+1632496359 source:d:\c proj\trabalho2_aed2\grafo.c
+	"grafo.h"
+	<stdlib.h>
+	<stdio.h>
+	"fila.h"
 

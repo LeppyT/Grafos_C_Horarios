@@ -10,6 +10,7 @@ struct grafo
     Lista **Mat;
 };
 
+
 typedef struct grafo TipoGrafo;
 
 TipoGrafo* CriarGrafo(int NVertices);
@@ -18,6 +19,7 @@ int retirarAresta(TipoGrafo *Grafo, int v1, int v2);
 void exibirGrafo(TipoGrafo *G);
 void exibirMatriz(TipoGrafo *G);
 TipoGrafo* liberarGrafo(TipoGrafo* G);
-int caminho_mais_curto(TipoGrafo G, int v, int destino);
+int caminho_valido(TipoGrafo *G, int v1, int v2);
+int retirar_horario(TipoGrafo *G, int v1, int v2, int inicio, int fim);
 
 #endif // GRAFO_H_INCLUDED

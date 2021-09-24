@@ -40,7 +40,9 @@ int insere_elem (Lista *lst, int inicio, int fim)
         return 1;
     }
     Lista aux = *lst; // Faz aux apontar para 1onó
-    while (aux->prox != NULL && (aux->prox->inicio < inicio || (aux->prox->inicio == inicio && aux->prox->fim < fim)))
+    while (aux->prox != NULL &&
+            (aux->prox->inicio < inicio || (aux->prox->inicio == inicio && aux->prox->fim < fim)))
+        //duas chaves de ordenacao: primeiro ordenado por inicio, depois por fim
         aux = aux->prox; // Avança
     if(aux->prox!=NULL)
     {
@@ -70,6 +72,7 @@ int remove_elem (Lista *lst, int inicio, int fim)
     }
     while (aux->prox != NULL && (aux->prox->inicio < inicio || (aux->prox->inicio == inicio && aux->prox->fim < fim)))
     {
+        //segue ordenaçao por inicio, depois pelo fim
         aux = aux->prox;
     }
     if (aux->prox == NULL || aux->prox->inicio > inicio || aux->prox->fim > fim)
@@ -80,6 +83,173 @@ int remove_elem (Lista *lst, int inicio, int fim)
     return 1;
 }
 
+int menor_chegada(TipoGrafo *G, int v1, int v2)
+{
+    if(G == NULL)
+        return -1;
+
+    if (v1 < 0 || v1 >= G->NumVertices || v2 < 0 || v2 >= G->NumVertices)
+        return -1; // nao e possivel encontrar aresta: intervalo
+
+    if(lista_vazia(G->Mat[v1][v2])==1)
+        return -1;
+
+    int menor = G->Mat[v1][v2]->fim;
+    Lista aux = G->Mat[v1][v2];
+
+    while(aux != NULL)
+    {
+
+        if(aux->inicio>menor)//Se o horário de inicio e maior que o menor fim, nao e necessario continuar percorrendo a lista.
+            break;
+        if(aux->fim < menor)
+            menor = aux->fim;
+        aux = aux->prox;
+    }
+    return menor;
+}
+
+int ultima_saida(TipoGrafo *G, int v1, int v2)
+{
+    if(G==NULL)
+        return -1;
+    if (v1<0 || v1>= G-> NumVertices || v2 < 0 || v2 >= G->NumVertices)
+        return -1; // nao e possivel encontrar aresta: intervalo
+    if(lista_vazia(G->Mat[v1][v2])==1)
+        return -1;
+    int saida = G->Mat[v1][v2]->inicio;
+    Lista aux = G->Mat[v1][v2];
+    while(aux!=NULL)/*e necessario percorrer ate o final para encontrar o elemento desejado, pois o maior pode estar no ultimo no.
+        Possivel otimizacao: implementar uma lista circular e/ou adicionar cabeçalho para armazenar o maior e menor inicio e fim*/
+    {
+        if(aux->inicio>saida)
+            saida = aux->inicio;
+        aux = aux->prox;
+    }
+    return saida;
+}
+
+int menor_tempo(TipoGrafo *G, int v1, int v2, int * ini, int * fim)
+{
+    if(G==NULL)
+        return -1;
+    if (v1<0 || v1>= G-> NumVertices || v2 < 0 || v2 >= G->NumVertices)
+        return -1; // nao e possivel criar aresta: intervalo
+    if(lista_vazia(G->Mat[v1][v2])==1)
+        return -1;
+    Lista aux = G->Mat[v1][v2];
+    int menor = G->Mat[v1][v2]->fim - G->Mat[v1][v2]->inicio;
+
+    int stor_ini, stor_fim;
+    while(aux!=NULL)
+    {
+        /*da forma que foi criada a estrutura, o menor tempo possivel e um.
+        Para uma implementacao mais representativa de tempo, uma estrutura:
+            struct data
+            {
+                int horas;
+                int minutos;
+            } seria mais precisa.*/
+        if(menor == 1)
+        {
+            break;
+        }
+        if(aux->fim - aux->inicio < menor)
+        {
+            stor_fim = aux->fim;
+            stor_ini = aux->inicio;
+            menor = stor_fim - stor_ini;
+        }
+        aux = aux->prox;
+    }
+    *ini = stor_ini;
+    *fim = stor_fim;
+    return menor;
+}
+
+int menor_chegada_temporal(TipoGrafo *G, int v1, int v2, int tempoatual)
+{
+    if(G == NULL)
+        return -1;
+
+    if (v1 < 0 || v1 >= G->NumVertices || v2 < 0 || v2 >= G->NumVertices)
+        return -1;
+
+    if(lista_vazia(G->Mat[v1][v2])==1)
+        return -1;
+
+    Lista aux = G->Mat[v1][v2];
+
+    int menor = 300000;
+    while(aux != NULL)
+    {
+        if(aux->inicio<tempoatual)//Uma aresta que inicia antes do tempo atual não deve ser considerada
+        {
+            aux = aux->prox;
+            continue;
+        }
+        if(aux->inicio>menor)//Se o horário de inicio e maior que o menor fim, nao e necessario continuar percorrendo a lista.
+            break;
+        if(aux->fim < menor)
+            menor = aux->fim;
+        aux = aux->prox;
+    }
+    if(menor == 300000)//nenhum horario valido encontrado
+    {
+        return -1;
+    }
+    return menor;
+}
+
+int caminho_valido_aux(TipoGrafo *G, int v1, int v2, int * ant, int tempoatual)
+{
+    int v, flag, primeira_chegada;
+
+    if(lista_vazia(G->Mat[v1][v2]) == 0)//Existe aresta direta no destino
+    {
+        primeira_chegada = menor_chegada_temporal(G,v1,v2,tempoatual);
+        if(primeira_chegada != -1)//valor -1 -> nao existe horario valido
+            return 1; // Caminho encontrado;
+    }
+    for(v = 0; v < G->NumVertices; v++)
+    {
+        if(lista_vazia(G->Mat[v1][v]) == 0)  //Existe aresta entre vizinho v
+        {
+            primeira_chegada = menor_chegada_temporal(G,v1,v,tempoatual);
+            if(primeira_chegada == -1)//valor -1 -> nao existe horario valido
+                continue;
+            if(primeira_chegada >= ant[v])/*Se ant[v] for menor ou igual que a chegada descoberta,
+                esse vértice já foi visitado, e não se encontrou um caminho, pois a função teria retornado.
+                Isso significa que não existe um caminho em tempos iguais ou maiores.*/
+                continue;
+            ant[v] = primeira_chegada;//Marca que o vértice foi visitado, e o horário.
+            flag = caminho_valido_aux(G, v, v2, ant, primeira_chegada);
+        }
+        if(flag == 1)
+        {
+            return 1;  // Caminho encontrado;
+        }
+    }
+    return 0;
+}
+
+int caminho_valido(TipoGrafo *G, int v1, int v2)
+{
+    if(G == NULL)
+        return -1;
+
+    if (v1 < 0 ||  v1 >= G->NumVertices || v2 < 0 || v2 >= G->NumVertices)
+        return -1;//vertices nao existem
+    int ant[G->NumVertices];
+    for(int i = 0; i<G->NumVertices; i++)
+    {
+        ant[i] = 300000;/*vetor vai armazenar o tempo mais cedo que
+        ja se chegou no vertice i , inicializado com valor extremamente alto*/
+    }
+    int tempoatual = 0;
+    int i = caminho_valido_aux(G, v1, v2, ant, tempoatual);
+    return i;
+}
 
 
 void limpa_lista(Lista *lst)
@@ -113,6 +283,7 @@ TipoGrafo* CriarGrafo(int NVertices)
     }
     i=0;
     int j = 0;
+    int k;
     while(i<NVertices)
     {
         Grafo->Mat[i] = (Lista*) calloc (NVertices,sizeof(Lista));
@@ -142,7 +313,7 @@ int inserirAresta(TipoGrafo *G, int v1, int v2, int inicio, int fim)
     if (G == NULL)
         return -1;
     if (v1<0 || v1>= G-> NumVertices || v2 < 0 || v2 >= G->NumVertices || fim-inicio<1)
-        return -1; // nao eh possivel criar aresta: intervalo
+        return -1; // nao e possivel criar aresta: intervalo
     if(lista_vazia(G->Mat[v1][v2])==1)
         flag=1;
     int resultado = insere_elem(&(G->Mat[v1][v2]), inicio, fim);
@@ -158,11 +329,23 @@ int retirarAresta(TipoGrafo *G, int v1, int v2)
         return -1; // grafo nao existe
     if (v1<0 || v1>=G->NumVertices || v2<0 || v2>=G-> NumVertices)
         return -1; // nao eh possivel retirar aresta: intervalo
-    if( lista_vazia(G->Mat[v1][v2]) == 1)
+    if(lista_vazia(G->Mat[v1][v2]) == 1)
         return 0; // aresta nao existe
     limpa_lista(&G->Mat[v1][v2]); //remove aresta
     G->NumArestas--;
     return 1;
+}
+
+int retirar_horario(TipoGrafo *G, int v1, int v2, int inicio, int fim)
+{
+    if (G == NULL)
+        return -1; // grafo nao existe
+    if (v1<0 || v1>=G->NumVertices || v2<0 || v2>=G-> NumVertices)
+        return -1; // nao eh possivel retirar aresta: intervalo
+    if(lista_vazia(G->Mat[v1][v2]) == 1)
+        return 0; // aresta nao existe
+    int flag = remove_elem(&G->Mat[v1][v2], inicio, fim);
+    return flag;
 }
 
 void exibirGrafo(TipoGrafo *G)
@@ -173,8 +356,8 @@ void exibirGrafo(TipoGrafo *G)
     {
         printf( "%d:", v);
         for (w = 0; w < G->NumVertices; ++w)
-            if (lista_vazia(G->Mat[v][w])==0)
-                imprime_lista(G->Mat[v][w]);
+            if (lista_vazia(G->Mat[v][w]) == 0)
+                printf( " %d",w );
         printf( "\n");
     }
 }
@@ -182,12 +365,25 @@ void exibirGrafo(TipoGrafo *G)
 void exibirMatriz(TipoGrafo *G)
 {
     int v, w;
+    Lista aux;
     printf("\nGrafo - Matriz:\n");
     for (v = 0; v < G->NumVertices; ++v)
     {
         printf( "%d:", v);
         for (w = 0; w < G->NumVertices; ++w)
-            imprime_lista(G->Mat[v][w]);
+        {
+            if (lista_vazia(G->Mat[v][w]) == 0)
+            {
+                aux = G->Mat[v][w];
+                printf( " %d[",w );
+                while(aux != NULL)
+                {
+                    printf( "[%d,%d]",aux->inicio, aux->fim);
+                    aux = aux->prox;
+                }
+                printf("]");
+            }
+        }
         printf( "\n");
     }
 }
@@ -206,67 +402,3 @@ TipoGrafo* liberarGrafo(TipoGrafo* G)
     return G;
 }
 
-int FoiVisitado(int v, int visitados[], int tam)
-{
-    if(tam<v)
-        return -1;
-    else if(visitados[v]==1)
-    {
-        return 1;
-    }
-    return 0;
-}
-/*
-int caminho_mais_curto(TipoGrafo G, int v, int destino)
-{
-    int *visitados;
-    TipoFila *fila;
-    int i=0, cont = 0, vt;
-
-    int Dist[G.NumVertices], anterior[G.NumVertices];
-    visitados = (int *) malloc (G.NumVertices * sizeof (int));
-    //inicializa os vetores visitados, Dist, anterior.
-    for (i=0; i<G.NumVertices; i++)
-    {
-        visitados[i] = 0;
-        Dist[i] = 300000;
-        anterior[i] = -1;
-    }
-
-    // anotar como visitado o vértice de origem (busca)
-    visitados[cont]=v;
-
-    //Iniciar a fila e inserir o vértice de origem
-    fila = (TipoFila *) malloc (sizeof(TipoFila));
-    IniciaFila(fila);
-    Enfileira(v,fila);
-
-
-    Dist[v]=0;
-
-    while(Vazia(fila)!=1)
-    {
-        vt = Desenfileira(fila);
-        for(i=0; i<G.NumVertices; i++)
-        {
-            if(G.Mat[vt][i]>0)
-            {
-                if(FoiVisitado(i,visitados,G.NumVertices)==0)
-                {
-                    Enfileira(i,fila);
-                    visitados[i]=1;
-                }
-                if(Dist[i]>Dist[vt]+G.Mat[vt][i])
-                {
-                    Dist[i]=Dist[vt]+G.Mat[vt][i];
-                    anterior[i] = vt;
-                }
-            }
-        }
-    }
-
-
-
-    return Dist[destino];
-}
-*/
